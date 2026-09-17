@@ -71,6 +71,18 @@ export function isEffortPickerRequest(input: string): boolean {
   return pickerRequest(input, new Set(["effort", "variant"]));
 }
 
+/**
+ * Parse a `/rename <title>` request into the normalized title. Returns `""`
+ * for the bare usage form and undefined for any other input, so the command
+ * stays a client-side rename of the live session without shadowing a future
+ * runtime command of the same name.
+ */
+export function sessionRenameRequest(input: string): string | undefined {
+  const match = /^\/rename(?:\s+([\s\S]+))?$/iu.exec(input.trim());
+  if (!match) return undefined;
+  return (match[1] ?? "").replace(/\s+/gu, " ").trim();
+}
+
 interface ModelOption {
   id: string;
   providerId: string;

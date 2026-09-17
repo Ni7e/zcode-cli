@@ -8,7 +8,8 @@ import {
   isModelPickerRequest,
   modePicker,
   modelPicker,
-  providerModelPicker
+  providerModelPicker,
+  sessionRenameRequest
 } from "../packages/zcode-tui/src/selectors.ts";
 
 describe("TUI selectors", () => {
@@ -170,5 +171,22 @@ describe("TUI selectors", () => {
 
     expect(cascade!.providers.items[0]?.label).toBe("Z.AI");
     expect(cascade!.providers.items[1]?.label).toBe("BigModel");
+  });
+});
+
+describe("sessionRenameRequest", () => {
+  test("parses explicit rename titles", () => {
+    expect(sessionRenameRequest("/rename Sidebar drag fix")).toBe("Sidebar drag fix");
+    expect(sessionRenameRequest("  /rename   spaced   out  ")).toBe("spaced out");
+  });
+
+  test("returns an empty title for the bare usage form", () => {
+    expect(sessionRenameRequest("/rename")).toBe("");
+    expect(sessionRenameRequest("/rename ")).toBe("");
+  });
+
+  test("ignores other commands and conversation text", () => {
+    expect(sessionRenameRequest("/model zai/glm-5.2")).toBeUndefined();
+    expect(sessionRenameRequest("what does /rename do")).toBeUndefined();
   });
 });

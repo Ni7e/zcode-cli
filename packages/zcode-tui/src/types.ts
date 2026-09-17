@@ -102,6 +102,8 @@ export interface RuntimeAdapter {
   ) => Promise<unknown>;
   submitPrompt: (input: unknown, options: PromptCallOptions) => Promise<unknown>;
   setMode?: (mode: string) => Promise<unknown>;
+  /** Persists a user-owned session title (`title_source='custom'`). */
+  setCustomSessionTitle?: (options: { title: string; traceContext?: unknown }) => Promise<unknown>;
   listMcpServers?: () => Promise<unknown>;
   refreshWorkflowPanel?: (options: { runId?: string }) => Promise<unknown>;
   stopWorkflow?: (options: { runId: string }) => Promise<unknown>;

@@ -157,6 +157,7 @@ import {
   modePicker,
   modelPicker,
   providerModelPicker,
+  sessionRenameRequest,
   type PickerSpec,
   type ProviderModelGroup
 } from "./selectors.ts";
@@ -1361,6 +1362,7 @@ class ZCodeTui {
       { name: "diff", description: "Browse current and per-turn file changes" },
       { name: "context", description: "Inspect context usage and prompt composition" },
       { name: "status", description: "Inspect detailed runtime and session status" },
+      { name: "rename", description: "Rename the current session", argumentHint: "<title>" },
       { name: "config", description: "Configure ZCode TUI settings" },
       { name: "settings", description: "Configure ZCode TUI settings" },
       { name: "search", description: "Search the retained transcript", argumentHint: "<text>|next|prev|clear" },
@@ -1635,6 +1637,11 @@ class ZCodeTui {
     }
     if (input === "/status") {
       await this.showStatusDetails();
+      return;
+    }
+    const renameRequest = sessionRenameRequest(input);
+    if (renameRequest !== undefined) {
+      await this.handleSessionRename(renameRequest);
       return;
     }
     if (input === "/config" || input === "/settings") {
@@ -4795,6 +4802,40 @@ class ZCodeTui {
       }),
       items: [{ value: "close", label: "Close" }]
     });
+  }
+
+  /**
+   * `/rename <title>`: persists a user-owned session title through the
+   * runtime's setCustomSessionTitle capability, so the runtime's own title
+   * generator will not replace it later. Older runtimes without the bridge
+   * keep the previous title and say so.
+   */
+  private async handleSessionRename(title: string): Promise<void> {
+    if (!this.options.setCustomSessionTitle) {
+      this.addNotice("Session renaming is unavailable in this runtime.", "warning");
+      return;
+    }
+    if (!this.sessionId) {
+      this.addNotice("No active session to rename yet.", "warning");
+      return;
+    }
+    if (!title) {
+      this.addNotice("Usage: /rename <new title>", "muted");
+      return;
+    }
+    try {
+      await this.options.setCustomSessionTitle({ title });
+    } catch (error) {
+      this.addNotice(
+        `Rename failed: ${error instanceof Error ? error.message : String(error)}`,
+        "error"
+      );
+      return;
+    }
+    this.sessionTerminalTitle = title;
+    this.sessionTitleEmitted = true;
+    this.refreshSessionTerminalTitle();
+    this.addNotice(`Session renamed to: ${title}`, "muted");
   }
 
   private async readMcpSummary(): Promise<string | undefined> {
