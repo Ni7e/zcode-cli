@@ -106,6 +106,8 @@ export interface RuntimeAdapter {
   setMode?: (mode: string) => Promise<unknown>;
   /** Persists a user-owned session title (`title_source='custom'`). */
   setCustomSessionTitle?: (options: { title: string; traceContext?: unknown }) => Promise<unknown>;
+  /** Returns the current session's custom title, or undefined for other title sources. */
+  readCustomSessionTitle?: () => Promise<unknown>;
   readExecutionState?: () => Promise<unknown>;
   setPlanEnabled?: (enabled: boolean) => Promise<unknown>;
   listMcpServers?: () => Promise<unknown>;

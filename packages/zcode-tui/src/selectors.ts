@@ -1,3 +1,4 @@
+import { normalizeSessionTitle } from "./session-title.ts";
 import { asString, isRecord } from "./types.ts";
 
 export interface PickerItem {
@@ -63,14 +64,12 @@ export function isEffortPickerRequest(input: string): boolean {
 
 /**
  * Parse a `/rename <title>` request into the normalized title. Returns `""`
- * for the bare usage form and undefined for any other input, so the command
- * stays a client-side rename of the live session without shadowing a future
- * runtime command of the same name.
+ * for an empty title and undefined for any other command or conversation text.
  */
 export function sessionRenameRequest(input: string): string | undefined {
   const match = /^\/rename(?:\s+([\s\S]+))?$/iu.exec(input.trim());
   if (!match) return undefined;
-  return (match[1] ?? "").replace(/\s+/gu, " ").trim();
+  return normalizeSessionTitle(match[1] ?? "");
 }
 
 function extractModelId(record: Record<string, unknown> | undefined, raw: unknown): string | undefined {

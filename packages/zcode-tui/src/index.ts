@@ -184,6 +184,7 @@ import {
 } from "./selection-command.ts";
 import {
   emitSessionTerminalTitle,
+  normalizeSessionTitle,
   SESSION_TITLE_SPINNER_FRAME_DURATION_MS,
   sessionTitleFromFirstMessage,
   sessionTitleSpinnerFrame
@@ -2134,6 +2135,7 @@ class ZCodeTui {
       this.emittedSessionTerminalTitle = "";
       emitSessionTerminalTitle(this.options.stdout ?? process.stdout, "");
       this.sessionMetrics = {};
+      await this.restoreCustomSessionTitle();
       this.restoreTranscript(restoredMessages(result.restoredMessages));
       if (this.transcript.blockCount > 0) this.enterSessionRail(true);
     }
@@ -5135,7 +5137,21 @@ class ZCodeTui {
     }
   }
 
+  private async restoreCustomSessionTitle(): Promise<void> {
+    try {
+      const persistedTitle = await this.options.readCustomSessionTitle?.();
+      const title = typeof persistedTitle === "string" ? normalizeSessionTitle(persistedTitle) : "";
+      if (!title) return;
+      this.sessionTerminalTitle = title;
+      this.sessionTitleEmitted = true;
+      this.refreshSessionTerminalTitle();
+    } catch {
+      // Older runtimes and unavailable metadata fall back to the first message.
+    }
+  }
+
   private async restoreInitialTranscript(): Promise<void> {
+    await this.restoreCustomSessionTitle();
     if (this.options.loadSessionTranscript) {
       try {
         this.restoreTranscript(restoredMessages(await this.options.loadSessionTranscript()));

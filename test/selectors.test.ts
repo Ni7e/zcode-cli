@@ -129,6 +129,13 @@ describe("sessionRenameRequest", () => {
   test("returns an empty title for the bare usage form", () => {
     expect(sessionRenameRequest("/rename")).toBe("");
     expect(sessionRenameRequest("/rename ")).toBe("");
+    expect(sessionRenameRequest("/rename \x1b]0;INJECTED\x07")).toBe("");
+  });
+
+  test("removes terminal controls before persisting a title", () => {
+    expect(sessionRenameRequest("/rename safe\x07\x1b]0;INJECTED\x07")).toBe("safe");
+    expect(sessionRenameRequest("/rename safe\u009c\u009d0;INJECTED\u009c")).toBe("safe");
+    expect(sessionRenameRequest("/rename 修复\x1b[31m登录\x1b[0m  ✓")).toBe("修复登录 ✓");
   });
 
   test("ignores other commands and conversation text", () => {
